@@ -1,0 +1,46 @@
+# Runtime data: personal, never publish
+data/
+state/
+logs/
+*.log
+shots/
+edge-profile/
+*.bak
+*.bak*
+backup/
+.heartbeat_state
+
+# Generated per install (filled from templates; may hold personal details)
+/config.json
+/CLAUDE.md
+CLAUDE.ronin-template.md
+ronin-telegram/telegram-prompt.md
+
+# Secrets
+.env
+.env.*
+*.pem
+*.key
+auth/
+*_auth/
+session/
+sessions/
+
+# Dependencies and caches
+node_modules/
+__pycache__/
+*.pyc
+.venv/
+
+# Upstream clones (when installing in place)
+/fullstack-agent/
+/backtalk/
+/ai-visualizer/
+/ai-memory-vault/
+
+# OS / editor
+Thumbs.db
+desktop.ini
+.DS_Store
+.vscode/
+.idea/

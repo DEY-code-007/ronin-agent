@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; media-src 'self' blob: mediastream:; img-src 'self' data: blob:">
+<title>RONIN Guard</title>
+<style>
+:root {
+  --bg: #07080b; --ink: #f2f3f6; --muted: #8b919c; --dim: #4a4f59; --line: rgba(255,255,255,.08);
+  --ok: #36d27a; --amber: #ffb547; --red: #ff3b47; --key: rgba(255,255,255,.06); --key-hi: rgba(255,255,255,.12);
+  --ease: cubic-bezier(.23, 1, .32, 1);
+  --font: "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; overflow: hidden; background: var(--bg); color: var(--ink); font-family: var(--font); user-select: none; cursor: default; }
+body { display: grid; place-items: center; transition: background-color 400ms var(--ease); }
+body.alarm { animation: strobe 0.9s steps(1) infinite; }
+@keyframes strobe { 0% { background: #2a0306; } 50% { background: #7a0a12; } }
+body.countdown { background: #1a1204; }
+.wrap { width: min(560px, 92vw); display: flex; flex-direction: column; align-items: center; gap: 22px; text-align: center; }
+.badge { display: flex; align-items: center; gap: 10px; font-size: 13px; letter-spacing: .28em; text-transform: uppercase; color: var(--muted); }
+.badge svg { width: 18px; height: 18px; }
+.shield { width: 88px; height: 88px; color: var(--ok); filter: drop-shadow(0 0 28px rgba(54,210,122,.35)); transition: color 300ms ease, filter 300ms ease; }
+body.countdown .shield { color: var(--amber); filter: drop-shadow(0 0 28px rgba(255,181,71,.45)); }
+body.alarm .shield { color: #fff; filter: drop-shadow(0 0 40px rgba(255,59,71,.9)); }
+h1 { margin: 0; font-size: clamp(40px, 7vw, 76px); font-weight: 800; letter-spacing: -.03em; line-height: 1; text-wrap: balance; }
+body.alarm h1 { font-size: clamp(64px, 12vw, 140px); letter-spacing: .02em; }
+.sub { margin: 0; font-size: 17px; line-height: 1.5; color: var(--muted); max-width: 46ch; text-wrap: balance; }
+body.alarm .sub, body.countdown .sub { color: rgba(255,255,255,.85); }
+.clock { font-size: 15px; color: var(--dim); font-variant-numeric: tabular-nums; letter-spacing: .06em; }
+.count { font-size: 96px; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--amber); line-height: 1; }
+.dots { display: flex; gap: 14px; height: 18px; align-items: center; }
+.dots i { width: 14px; height: 14px; border-radius: 50%; border: 2px solid rgba(255,255,255,.35); transition: background-color 120ms ease, border-color 120ms ease, transform 160ms var(--ease); }
+.dots i.on { background: var(--ink); border-color: var(--ink); }
+.dots.shake { animation: shake 360ms var(--ease); }
+@keyframes shake { 20% { transform: translateX(-10px); } 40% { transform: translateX(9px); } 60% { transform: translateX(-6px); } 80% { transform: translateX(3px); } }
+.pad { display: grid; grid-template-columns: repeat(3, 76px); gap: 14px; }
+.pad button { width: 76px; height: 76px; border-radius: 50%; border: 1px solid var(--line); background: var(--key); color: var(--ink); font: 500 28px var(--font); cursor: pointer; transition: background-color 120ms ease, transform 120ms ease-out; }
+.pad button:active { background: var(--key-hi); transform: scale(.95); }
+.pad button.fn { font-size: 15px; color: var(--muted); background: transparent; border-color: transparent; }
+.msg { min-height: 22px; font-size: 14px; color: var(--amber); }
+.hidden { display: none !important; }
+.foot { position: fixed; left: 0; right: 0; bottom: 28px; text-align: center; font-size: 12px; color: var(--dim); letter-spacing: .08em; }
+.quiet { position: fixed; top: 18px; right: 22px; font-size: 12px; color: var(--amber); letter-spacing: .1em; }
+@media (prefers-reduced-motion: reduce) { body.alarm { animation: none; background: #7a0a12; } .dots.shake { animation: none; } }
+</style></head>
+<body>
+<div class="wrap">
+  <div class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg><span id="badge">RONIN Guard</span></div>
+  <svg class="shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M12 2.5 4.5 5.5v6c0 4.6 3.1 8.6 7.5 10 4.4-1.4 7.5-5.4 7.5-10v-6L12 2.5Z"/><path id="shieldMark" d="m8.8 12.2 2.3 2.3 4.3-4.6"/></svg>
+  <h1 id="title">RONIN Guard</h1>
+  <p class="sub" id="sub"></p>
+  <div class="count hidden" id="count"></div>
+  <div class="dots hidden" id="dots"></div>
+  <div class="pad hidden" id="pad"></div>
+  <div class="msg" id="msg"></div>
+  <div class="clock" id="clock"></div>
+</div>
+<div class="foot" id="foot">This device is protected by an alarm</div>
+<div class="quiet hidden" id="quiet">TEST MODE · QUIET</div>
+<script>
+const $ = (id) => document.getElementById(id);
+let S = { state: "idle" }, pin = "", firstPin = "", cdTimer = null, graceTimer = null, audio = null, siren = null;
+
+// ---------- pin pad ----------
+const keys = ["1","2","3","4","5","6","7","8","9","del","0","ok"];
+for (const k of keys) {
+  const b = document.createElement("button"); b.textContent = k === "del" ? "Delete" : k === "ok" ? "OK" : k;
+  if (k.length > 1) b.className = "fn";
+  b.addEventListener("pointerdown", (e) => { e.preventDefault(); press(k); });
+  $("pad").appendChild(b);
+}
+function dots() { const n = Math.max(4, pin.length); $("dots").innerHTML = Array.from({ length: n }, (_, i) => `<i class="${i < pin.length ? "on" : ""}"></i>`).join(""); }
+function press(k) {
+  if (k === "del") pin = pin.slice(0, -1);
+  else if (k === "ok") return submit();
+  else if (pin.length < 8) pin += k;
+  dots();
+}
+function shake(text) { $("msg").textContent = text; const d = $("dots"); d.classList.remove("shake"); void d.offsetWidth; d.classList.add("shake"); pin = ""; dots(); }
+async function submit() {
+  if (S.state === "setup") {
+    if (!/^\d{4,8}$/.test(pin)) return shake("The PIN must be 4–8 digits");
+    if (!firstPin) { firstPin = pin; pin = ""; dots(); $("sub").textContent = "Enter the same PIN once more."; $("msg").textContent = ""; return; }
+    if (pin !== firstPin) { firstPin = ""; $("sub").textContent = "The PINs did not match. Start over."; return shake(""); }
+    await window.guard.setPin(pin); pin = ""; firstPin = ""; dots(); return;
+  }
+  if (!pin) return;
+  const ok = await window.guard.pin(pin);
+  if (!ok) shake("Wrong PIN");
+}
+document.addEventListener("keydown", (e) => {
+  e.preventDefault();
+  if (S.state === "armed") window.guard.input("Keyboard touched");
+  if (/^\d$/.test(e.key)) press(e.key);
+  else if (e.key === "Backspace") press("del");
+  else if (e.key === "Enter") press("ok");
+});
+document.addEventListener("pointermove", () => { if (S.state === "armed") window.guard.input("Touchpad touched"); });
+document.addEventListener("pointerdown", () => { if (S.state === "armed") window.guard.input("Screen or touchpad clicked"); });
+document.addEventListener("contextmenu", (e) => e.preventDefault());
+
+// ---------- sound ----------
+function ctx() { if (!audio) audio = new AudioContext(); return audio; }
+function beep(freq = 880, ms = 120, vol = 0.25) {
+  if (S.quiet) return;
+  const a = ctx(), o = a.createOscillator(), g = a.createGain();
+  o.frequency.value = freq; o.type = "square"; g.gain.value = vol;
+  o.connect(g).connect(a.destination); o.start(); o.stop(a.currentTime + ms / 1000);
+}
+function sirenOn() {
+  if (S.quiet || siren) return;
+  const a = ctx(), g = a.createGain(); g.gain.value = 1; g.connect(a.destination);
+  const o1 = a.createOscillator(), o2 = a.createOscillator(); o1.type = "sawtooth"; o2.type = "square";
+  const lfo = a.createOscillator(), depth = a.createGain(); lfo.frequency.value = 1.6; depth.gain.value = 450;
+  lfo.connect(depth); depth.connect(o1.frequency); depth.connect(o2.frequency);
+  o1.frequency.value = 1050; o2.frequency.value = 1060;
+  o1.connect(g); o2.connect(g); o1.start(); o2.start(); lfo.start();
+  siren = { stop() { try { o1.stop(); o2.stop(); lfo.stop(); g.disconnect(); } catch {} } };
+}
+function sirenOff() { if (siren) { siren.stop(); siren = null; } }
+
+// ---------- camera ----------
+async function snap() {
+  try {
+    const st = await navigator.mediaDevices.getUserMedia({ video: { width: 1280, height: 720 }, audio: false });
+    const v = document.createElement("video"); v.srcObject = st; v.muted = true; await v.play();
+    await new Promise((r) => setTimeout(r, 900));   // let exposure settle
+    const c = document.createElement("canvas"); c.width = v.videoWidth || 1280; c.height = v.videoHeight || 720;
+    c.getContext("2d").drawImage(v, 0, 0, c.width, c.height);
+    st.getTracks().forEach((t) => t.stop());
+    window.guard.shot(c.toDataURL("image/jpeg", 0.85));
+  } catch (e) { console.log("camera failed", e && e.message); }
+}
+
+// ---------- render ----------
+function show(id, on) { $(id).classList.toggle("hidden", !on); }
+function render() {
+  const s = S.state;
+  document.body.className = s === "alarm" ? "alarm" : s === "countdown" ? "countdown" : "";
+  show("quiet", !!S.quiet);
+  clearInterval(cdTimer); clearInterval(graceTimer);
+  const needPad = ["setup", "countdown", "alarm", "armed"].includes(s);
+  show("pad", needPad); show("dots", needPad); show("count", false);
+  if (s !== "alarm") sirenOff();
+  if (s === "setup") {
+    $("badge").textContent = "First setup"; $("title").textContent = "Set a PIN";
+    $("sub").textContent = firstPin ? "Enter the same PIN once more." : "Only this PIN can silence the alarm. 4–8 digits.";
+    $("foot").textContent = "The PIN is stored on this computer as a salted hash";
+  } else if (s === "grace") {
+    $("badge").textContent = "RONIN Guard"; $("title").textContent = "Arming";
+    let left = S.grace; show("count", true); $("count").style.color = "var(--ok)"; $("count").textContent = left;
+    $("sub").textContent = "Walk away without touching the laptop.";
+    graceTimer = setInterval(() => { left--; if (left >= 0) $("count").textContent = left; }, 1000);
+  } else if (s === "armed") {
+    $("badge").textContent = "RONIN Guard"; $("title").textContent = "LOCKED DOWN";
+    $("sub").textContent = "If touched, a siren sounds, the camera takes a photo and the owner is notified instantly.";
+    $("foot").textContent = "This device is protected by an alarm";
+  } else if (s === "countdown") {
+    $("badge").textContent = S.reason; $("title").textContent = "Enter PIN";
+    let left = S.countdown; show("count", true); $("count").style.color = "var(--amber)"; $("count").textContent = left;
+    $("sub").textContent = "Enter the PIN or the alarm will sound.";
+    beep(880, 140);
+    cdTimer = setInterval(() => { left--; if (left >= 0) { $("count").textContent = left; beep(left < 3 ? 1320 : 880, 140); } }, 1000);
+  } else if (s === "alarm") {
+    $("badge").textContent = S.reason; $("title").textContent = "ALARM";
+    $("sub").textContent = "Your photo has been sent to the owner.";
+    sirenOn();
+  } else if (s === "done") {
+    $("badge").textContent = "RONIN Guard"; $("title").textContent = "Unlocked"; $("sub").textContent = "Welcome back."; show("pad", false); show("dots", false);
+  }
+  if (S.wrong && (s === "countdown" || s === "alarm")) $("msg").textContent = `Wrong PIN (${S.wrong})`;
+  else if (s !== "setup") $("msg").textContent = "";
+  dots();
+}
+window.guard.onState((s) => {
+  const prev = S.state; S = s; if (prev !== s.state || s.state === "setup") { if (prev !== s.state) pin = ""; render(); }
+  if (s.snap) { snap(); if (s.state === "alarm") setTimeout(snap, 6000); }
+});
+setInterval(() => { $("clock").textContent = new Date().toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", second: "2-digit" }); }, 1000);
+dots();
+</script>
+</body></html>

@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'">
+<title>RONIN Island</title>
+<style>
+/* Layout: one black island centered at the top; collapsed = pill, open = 4 tiles in a row. */
+:root {
+  --ink: #f4f5f7; --muted: #9aa1ad; --dim: #5d6370; --bg: #0a0a0d; --tile: #15161b; --edge: rgba(255,255,255,.07);
+  --claude: #e8794a; --blue: #4d8dff; --green: #36d27a; --amber: #ffb547; --music: #e2365b; --focus: #a061ff; --day: #2fb3c8;
+  --ease: cubic-bezier(.23, 1, .32, 1); --spring: cubic-bezier(.34, 1.3, .64, 1);
+  --font: "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: transparent; overflow: hidden; font-family: var(--font); color: var(--ink); -webkit-user-select: none; user-select: none; }
+.stage { display: flex; justify-content: center; align-items: flex-start; height: 100%; }
+.island { position: relative; width: 380px; height: 30px; border-radius: 0 0 15px 15px; background: var(--bg); box-shadow: 0 10px 30px rgba(0,0,0,.45), inset 0 0 0 1px var(--edge); overflow: hidden;
+  transition: width 420ms var(--spring), height 420ms var(--spring), border-radius 420ms var(--ease); }
+.island.open { width: 760px; height: 236px; border-radius: 0 0 28px 28px; }
+
+/* collapsed row */
+.pill { position: absolute; inset: 0; display: flex; align-items: center; gap: 10px; padding: 0 14px; font-size: 12.5px; transition: opacity 180ms ease; }
+.island.open .pill { opacity: 0; pointer-events: none; }
+.dot { width: 9px; height: 9px; border-radius: 50%; background: var(--dim); flex: none; transition: background-color 300ms ease, box-shadow 300ms ease; }
+.dot.working { background: var(--claude); box-shadow: 0 0 10px var(--claude); animation: breathe 1.6s ease-in-out infinite; }
+.dot.done { background: var(--blue); box-shadow: 0 0 10px var(--blue); }
+.dot.seen { background: var(--green); box-shadow: 0 0 10px var(--green); }
+.dot.needs { background: var(--amber); box-shadow: 0 0 10px var(--amber); animation: breathe .9s ease-in-out infinite; }
+@keyframes breathe { 50% { opacity: .45; } }
+.pill .txt { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--muted); }
+.pill .txt b { color: var(--ink); font-weight: 600; }
+.pill .right { font-variant-numeric: tabular-nums; color: var(--focus); font-weight: 600; }
+.eq { display: inline-flex; gap: 2px; align-items: flex-end; height: 12px; }
+.eq i { width: 2.5px; background: var(--music); border-radius: 2px; animation: eq 900ms ease-in-out infinite; }
+.eq i:nth-child(2) { animation-delay: -300ms; } .eq i:nth-child(3) { animation-delay: -600ms; }
+@keyframes eq { 0%,100% { height: 30%; } 50% { height: 100%; } }
+.eq.paused i { animation: none; height: 30%; }
+
+/* open grid */
+.grid { position: absolute; inset: 14px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; opacity: 0; transform: scale(.96); transition: opacity 220ms ease, transform 420ms var(--spring); }
+.island.open .grid { opacity: 1; transform: none; transition-delay: 60ms; }
+.tile { position: relative; border-radius: 18px; background: var(--tile); padding: 12px 13px; display: flex; flex-direction: column; gap: 6px; overflow: hidden; box-shadow: inset 0 0 0 1px var(--edge);
+  transition: transform 160ms var(--ease), box-shadow 300ms ease, background-color 300ms ease; }
+.tile:active { transform: scale(.97); }
+.tile .k { font-size: 11px; font-weight: 600; letter-spacing: .02em; color: var(--muted); display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.tile .big { font-size: 26px; font-weight: 700; letter-spacing: -.02em; line-height: 1.05; font-variant-numeric: tabular-nums; }
+.tile .sub { font-size: 12px; color: var(--muted); line-height: 1.3; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.tile .foot { margin-top: auto; display: flex; gap: 6px; align-items: center; }
+
+/* Claude tile glow states */
+.t-claude { background: linear-gradient(160deg, #2a1810, var(--tile) 70%); }
+.t-claude.working { box-shadow: inset 0 0 0 1.5px rgba(232,121,74,.65), 0 0 22px rgba(232,121,74,.35); }
+.t-claude.working::after { content: ""; position: absolute; inset: -40%; background: conic-gradient(from 0deg, transparent 0 70%, rgba(232,121,74,.28) 85%, transparent 100%); animation: spin 2.4s linear infinite; pointer-events: none; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.t-claude.done { background: linear-gradient(160deg, #0f2347, var(--tile) 75%); box-shadow: inset 0 0 0 1.5px rgba(77,141,255,.7), 0 0 22px rgba(77,141,255,.35); }
+.t-claude.seen { background: linear-gradient(160deg, #0d2f1f, var(--tile) 75%); box-shadow: inset 0 0 0 1.5px rgba(54,210,122,.6), 0 0 18px rgba(54,210,122,.3); }
+.t-claude.needs { background: linear-gradient(160deg, #33240a, var(--tile) 75%); box-shadow: inset 0 0 0 1.5px rgba(255,181,71,.7), 0 0 22px rgba(255,181,71,.35); }
+.sess { font-size: 11.5px; color: var(--muted); display: flex; flex-direction: column; gap: 2px; }
+.sess span { display: flex; align-items: center; gap: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sess .dot { width: 7px; height: 7px; }
+
+.t-music { background: linear-gradient(160deg, #3a0d1a, var(--tile) 70%); }
+.t-music.playing { box-shadow: inset 0 0 0 1.5px rgba(226,54,91,.5), 0 0 18px rgba(226,54,91,.25); }
+.t-music .title { font-size: 15px; font-weight: 700; line-height: 1.2; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.ctl { width: 34px; height: 34px; border-radius: 50%; border: 0; background: rgba(255,255,255,.08); color: var(--ink); display: grid; place-items: center; cursor: pointer; transition: transform 140ms var(--ease), background-color 150ms ease; }
+.ctl:hover { background: rgba(255,255,255,.16); } .ctl:active { transform: scale(.9); }
+.ctl.main { width: 40px; height: 40px; background: var(--ink); color: #111; }
+
+.t-focus { background: linear-gradient(160deg, #22123d, var(--tile) 70%); cursor: pointer; }
+.t-focus.running { box-shadow: inset 0 0 0 1.5px rgba(160,97,255,.6), 0 0 20px rgba(160,97,255,.3); }
+.t-focus.ring { animation: ring 600ms ease-in-out 6; }
+@keyframes ring { 50% { box-shadow: inset 0 0 0 2px #fff, 0 0 30px rgba(160,97,255,.8); } }
+.bar { height: 5px; border-radius: 3px; background: rgba(255,255,255,.08); overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--focus); border-radius: inherit; transform-origin: left; }
+.mini { font-size: 11px; color: var(--dim); }
+.link { background: none; border: 0; color: var(--muted); font: inherit; font-size: 11px; cursor: pointer; padding: 0; }
+.link:hover { color: var(--ink); }
+
+.t-day { background: linear-gradient(160deg, #0c2a30, var(--tile) 70%); }
+.x { position: absolute; top: 6px; right: 10px; z-index: 3; width: 20px; height: 20px; border-radius: 50%; border: 0; background: transparent; color: var(--dim); cursor: pointer; font-size: 13px; line-height: 1; opacity: 0; transition: opacity 200ms ease; }
+.island.open .x { opacity: 1; } .x:hover { color: var(--ink); }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition-duration: 1ms !important; } }
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="island" id="island">
+    <div class="pill" id="pill"></div>
+    <button class="x" id="quit" title="Close RONIN Island">✕</button>
+    <div class="grid">
+      <section class="tile t-claude" id="tClaude"></section>
+      <section class="tile t-music" id="tMusic"></section>
+      <section class="tile t-focus" id="tFocus" title="Click: start / pause"></section>
+      <section class="tile t-day" id="tDay"></section>
+    </div>
+  </div>
+</div>
+<script>
+const $ = (s) => document.querySelector(s);
+const islandEl = $("#island");
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const mmss = (ms) => { const s = Math.max(0, Math.round(ms / 1000)); return String(Math.floor(s / 60)).padStart(2, "0") + ":" + String(s % 60).padStart(2, "0"); };
+const ICON = {
+  play: '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>',
+  pause: '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M7 5h4v14H7zM13 5h4v14h-4z"/></svg>',
+  next: '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6l8.5 6L6 18zM16 6h2v12h-2z"/></svg>',
+  prev: '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M18 6l-8.5 6L18 18zM6 6h2v12H6z"/></svg>',
+};
+
+// ---- open / close (hover), window grows first, shrinks after the animation ----
+let open = false, closeT = null;
+islandEl.addEventListener("mouseenter", () => { clearTimeout(closeT); if (!open) { open = true; window.island.size(true); requestAnimationFrame(() => islandEl.classList.add("open")); markSeenSoon(); } });
+islandEl.addEventListener("mouseleave", () => { closeT = setTimeout(() => { open = false; islandEl.classList.remove("open"); setTimeout(() => { if (!open) window.island.size(false); }, 380); }, 450); });
+$("#quit").addEventListener("click", () => window.island.quit());
+
+// ---- focus timer (renderer state, survives as long as the island runs) ----
+const FOCUS_MS = 25 * 60 * 1000;
+let focus = { running: false, endAt: 0, left: FOCUS_MS };
+try { const s = JSON.parse(localStorage.getItem("focus") || "null"); if (s) focus = s; } catch {}
+const saveFocus = () => { try { localStorage.setItem("focus", JSON.stringify(focus)); } catch {} };
+$("#tFocus").addEventListener("click", (e) => {
+  if (e.target.closest("[data-reset]")) { focus = { running: false, endAt: 0, left: FOCUS_MS }; saveFocus(); return paint(); }
+  if (focus.running) { focus.left = focus.endAt - Date.now(); focus.running = false; }
+  else { if (focus.left <= 0) focus.left = FOCUS_MS; focus.endAt = Date.now() + focus.left; focus.running = true; }
+  saveFocus(); paint();
+});
+
+let last = { sessions: [], media: { ok: false }, extras: {} };
+let seenTimer = null;
+function markSeenSoon() {
+  clearTimeout(seenTimer);
+  seenTimer = setTimeout(() => { seenTimer = null; if (!open) return; last.sessions.filter((s) => s.state === "done" && !s.seen).forEach((s) => window.island.seen(s.id)); }, 1200);
+}
+
+function sessionView(s, now) {
+  // stale "working" (no hook for 45 min) counts as idle; seen sessions fade out after 12 s
+  if (s.state === "working" && now - s.at > 45 * 60 * 1000) return null;
+  if (s.state === "done" && s.seen) { if (now - (s.seenAt || now) > 12000) { window.island.forget(s.id); return null; } return { ...s, view: "seen" }; }
+  return { ...s, view: s.state };
+}
+
+function paint() {
+  const now = Date.now();
+  const ss = last.sessions.map((s) => sessionView(s, now)).filter(Boolean).sort((a, b) => b.at - a.at);
+  const rank = { needs: 4, working: 3, done: 2, seen: 1 };
+  const top = ss.slice().sort((a, b) => rank[b.view] - rank[a.view] || b.at - a.at)[0];
+  const m = last.media || {};
+
+  // focus math
+  const fLeft = focus.running ? focus.endAt - now : focus.left;
+  if (focus.running && fLeft <= 0) { focus = { running: false, endAt: 0, left: 0 }; saveFocus(); const t = $("#tFocus"); t.classList.remove("ring"); void t.offsetWidth; t.classList.add("ring"); }
+
+  // ---- collapsed pill ----
+  let txt = "";
+  if (top) {
+    const label = { working: "Claude is working", done: "Claude is done", seen: "Seen", needs: "Claude needs approval" }[top.view];
+    txt = `<b>${label}</b>` + (top.view === "working" && top.since ? ` · ${mmss(now - top.since)}` : "") + (ss.length > 1 ? ` · ${ss.length} sessions` : "");
+  } else if (m.ok && m.title) {
+    txt = `<span class="eq ${m.playing ? "" : "paused"}"><i></i><i></i><i></i></span> <b>${esc(m.title)}</b> · ${esc(m.artist)}`;
+  } else txt = `<b>${esc((last.extras && last.extras.agent) || "RONIN")}</b> · ready`;
+  $("#pill").innerHTML = `<span class="dot ${top ? top.view : ""}"></span><span class="txt">${txt}</span>` + (focus.running ? `<span class="right">${mmss(fLeft)}</span>` : "");
+
+  // ---- Claude tile ----
+  const c = $("#tClaude");
+  c.className = "tile t-claude " + (top ? top.view : "");
+  const big = top ? { working: top.since ? mmss(now - top.since) : "…", done: "Done", seen: "OK", needs: "Approve" }[top.view] : "Idle";
+  const sub = top ? { working: "Working", done: "Waiting for you to look", seen: "Seen, clearing", needs: esc(top.message || "Waiting for approval") }[top.view] : "No active session";
+  c.innerHTML = `<div class="k">Claude Code</div><div class="big">${big}</div><div class="sub">${sub}</div>` +
+    `<div class="sess">${ss.slice(0, 3).map((s) => `<span><i class="dot ${s.view}"></i>${esc(s.label)} · ${{ working: "working", done: "done", seen: "seen", needs: "approve" }[s.view]}</span>`).join("")}</div>`;
+
+  // ---- Music tile ----
+  const mu = $("#tMusic");
+  mu.className = "tile t-music " + (m.ok && m.playing ? "playing" : "");
+  const appName = m.app ? (/spotify/i.test(m.app) ? "Spotify" : /chrome|msedge|firefox/i.test(m.app) ? "Browser" : m.app.split(/[!.]/)[0]) : "";
+  mu.innerHTML = m.ok && m.title
+    ? `<div class="k">Music <span>${esc(appName)}</span></div><div class="title">${esc(m.title)}</div><div class="sub">${esc(m.artist)}</div>
+       <div class="foot"><button class="ctl" data-m="prev" title="Previous">${ICON.prev}</button><button class="ctl main" data-m="toggle" title="Play / pause">${m.playing ? ICON.pause : ICON.play}</button><button class="ctl" data-m="next" title="Next">${ICON.next}</button></div>`
+    : `<div class="k">Music</div><div class="big" style="font-size:20px">Quiet</div><div class="sub">Shows up here when something plays.</div>`;
+
+  // ---- Focus tile ----
+  const f = $("#tFocus");
+  f.classList.toggle("running", focus.running);
+  const pct = 1 - Math.max(0, fLeft) / FOCUS_MS;
+  f.innerHTML = `<div class="k">Focus <button class="link" data-reset title="Reset">reset</button></div><div class="big">${mmss(fLeft > 0 ? fLeft : 0)}</div>` +
+    `<div class="sub">${focus.running ? "Focused. Tap to pause." : fLeft <= 0 ? "Time is up. Take a break." : fLeft < FOCUS_MS ? "Paused. Tap to resume." : "Tap to start 25 min."}</div>` +
+    `<div class="foot" style="width:100%"><div class="bar" style="flex:1"><i style="transform:scaleX(${pct.toFixed(3)})"></i></div></div>`;
+
+  // ---- Day tile: next schedule block ----
+  const d = $("#tDay");
+  const rows = (last.extras && last.extras.schedule) || [];
+  const hm = new Date(now).toTimeString().slice(0, 5);
+  const cur = rows.filter((r) => r.start <= hm && (!r.end || r.end > hm)).pop();
+  const nxt = rows.find((r) => r.start > hm);
+  const hudDown = !(last.extras && last.extras.schedule);
+  d.innerHTML = `<div class="k">Today</div>` +
+    (nxt ? `<div class="big" style="font-size:22px">${esc(nxt.start)}</div><div class="sub">${esc(nxt.text)}</div>` : `<div class="big" style="font-size:20px">Day done</div><div class="sub">${cur ? esc(cur.text) : "No plan"}</div>`) +
+    `<div class="foot"><span class="mini">${hudDown ? "HUD offline" : cur ? "Now: " + esc(cur.text) : ""}</span></div>`;
+}
+
+document.addEventListener("click", (e) => { const b = e.target.closest("[data-m]"); if (b) { window.island.media(b.dataset.m); setTimeout(tick, 600); } });
+
+async function tick() { try { last = await window.island.state(); } catch {} paint(); if (open && !seenTimer && last.sessions.some((x) => x.state === "done" && !x.seen)) markSeenSoon(); }
+tick(); setInterval(tick, 1000);
+if (location.search.includes("demo=open")) { open = true; window.island.size(true); islandEl.classList.add("open"); islandEl.addEventListener("mouseleave", (e) => e.stopImmediatePropagation(), true); }
+</script>
+</body>
+</html>

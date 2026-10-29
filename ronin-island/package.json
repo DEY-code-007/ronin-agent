@@ -1,0 +1,17 @@
+{
+  "name": "ronin-island",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Dynamic-Island style notch for Windows: Claude Code session state, media controls, focus timer, next schedule block.",
+  "license": "MIT",
+  "main": "main.cjs",
+  "scripts": {
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "electron": "^37.10.3"
+  },
+  "allowScripts": {
+    "electron@37.10.3": true
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "name": "ronin-guard",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Laptop theft alarm: lock screen, siren, webcam photo and Telegram ping when touched.",
+  "license": "MIT",
+  "main": "main.cjs",
+  "scripts": {
+    "start": "electron . --arm",
+    "test-quiet": "set GUARD_QUIET=1&& electron . --arm"
+  },
+  "devDependencies": {
+    "electron": "^37.10.3"
+  },
+  "allowScripts": {
+    "electron@37.10.3": true
+  }
+}

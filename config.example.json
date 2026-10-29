@@ -1,0 +1,60 @@
+{
+  "_comment": "Copy to config.json in your INSTALL folder (install.ps1 does this). Never put tokens or keys here: secrets live in user environment variables (TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, ELEVENLABS_API_KEY).",
+  "agent_name": "RONIN",
+  "owner_name": "Your Name",
+  "language": "English",
+  "vault_path": "%USERPROFILE%\\RONIN-memory",
+  "face_url": "http://127.0.0.1:8790/faces/radial/",
+
+  "launcher": {
+    "start_hud": true,
+    "start_face": true,
+    "start_voice": true,
+    "start_telegram": false,
+    "start_remote_control": false,
+    "start_island": false,
+    "open_face_window": true
+  },
+
+  "hud": {
+    "port": 8797,
+    "schedule_note": "Weekly Schedule.md",
+    "day_rollover_hour": 4,
+    "sync_task": "\\RONIN\\Vault Sync",
+    "watch_urls": [
+      { "name": "example", "url": "https://example.com" }
+    ],
+    "weather": {
+      "enabled": false,
+      "latitude": 0.0,
+      "longitude": 0.0,
+      "timezone": "auto"
+    }
+  },
+
+  "reminders": {
+    "lead_minutes": 120,
+    "min_left_minutes": 15,
+    "speak": false,
+    "voice_id": "YOUR_ELEVENLABS_VOICE_ID",
+    "model": "eleven_turbo_v2_5",
+    "language_code": "en",
+    "events": [
+      { "name": "Gym", "days": ["Mon", "Wed"], "start": "19:00" },
+      { "name": "Team practice", "days": ["Sat"], "start": "10:00" }
+    ],
+    "lines": [
+      "{owner}, {event} starts in {left}. Wrap up what you're doing and get ready.",
+      "Heads up, {owner}: {event} in {left}. Eat something, pack your bag."
+    ]
+  },
+
+  "daily_summary": {
+    "opener": "Good morning {owner}. Today is {weekday}, {date}.",
+    "closer": "Let's get to work."
+  },
+
+  "sync": {
+    "extra_pull_repos": []
+  }
+}
