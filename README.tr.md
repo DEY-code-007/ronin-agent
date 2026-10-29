@@ -26,7 +26,18 @@ Temeli [Jared Rhodenizer](https://github.com/jaredrhod)'ın açık kaynak projel
 
 ## Ekran görüntüleri
 
-_Yer tutucu: kendi ekran görüntülerini buraya ekle (yüz penceresi, Island kapalı/açık, Guard kilit ekranı). Kişisel veri görünen görüntüleri commit'leme._
+**RONIN Island**: ekranın üstünde Dynamic Island tarzı bir çentik. Kapalıyken Claude Code ne yapıyor gösterir, üstüne gelince açılır.
+
+![Island kapalı](docs/screenshots/island-pill.png)
+![Island açık: Claude Code oturumları, müzik, odak sayacı, bugün](docs/screenshots/island-open.png)
+
+**RONIN Guard**: laptop hırsız alarmı. Önce kilit, biri dokunursa PIN geri sayımı, girilmezse tam alarm (siren, kamera fotoğrafı, Telegram bildirimi).
+
+| Kilitli | Dokunuldu | Alarm |
+| :---: | :---: | :---: |
+| ![Guard kilitli](docs/screenshots/guard-armed.png) | ![Guard geri sayım](docs/screenshots/guard-countdown.png) | ![Guard alarm](docs/screenshots/guard-alarm.png) |
+
+_Görüntülerde örnek veriler kullanılmıştır._
 
 ## Gereksinimler
 

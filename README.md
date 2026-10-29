@@ -26,7 +26,18 @@ It stands on the open-source work of [Jared Rhodenizer](https://github.com/jared
 
 ## Screenshots
 
-_Placeholder: add your own screenshots here (face window, Island collapsed/open, Guard lock screen). Do not commit screenshots that show personal data._
+**RONIN Island**: a Dynamic-Island style notch at the top of the screen. Collapsed it shows what Claude Code is doing; hover to open it.
+
+![Island collapsed](docs/screenshots/island-pill.png)
+![Island open: Claude Code sessions, music, focus timer, today](docs/screenshots/island-open.png)
+
+**RONIN Guard**: a laptop theft alarm. Locked, then a PIN countdown when someone touches it, then a full alarm (siren, webcam photo, Telegram ping).
+
+| Locked | Touched | Alarm |
+| :---: | :---: | :---: |
+| ![Guard locked](docs/screenshots/guard-armed.png) | ![Guard countdown](docs/screenshots/guard-countdown.png) | ![Guard alarm](docs/screenshots/guard-alarm.png) |
+
+_The screenshots use demo data._
 
 ## Requirements
 
