@@ -17,7 +17,7 @@ Temeli [Jared Rhodenizer](https://github.com/jaredrhod)'ın açık kaynak projel
 | **Ses + yüz** | [backtalk](https://github.com/jaredrhod/backtalk) (bas-konuş ses) ve [ai-visualizer](https://github.com/jaredrhod/ai-visualizer) (animasyonlu yüz), orijinal depolarından klonlanır. | klonlanır |
 | **Başlatıcı** (`ronin-app`) | Tek betik HUD'u, yüzü, sesi ve seçtiğin parçaları başlatır, yüzü Edge uygulama penceresinde açar. Zaten çalışanı atlar. | açık |
 | **HUD** (`ronin-hud`) | `127.0.0.1:8797` üzerinde yerel JSON: bugünün programı, açık işler, aktif projeler, bugünün iş kaydı, CPU/RAM/pil, servis durumu, isteğe bağlı hava durumu ve site kontrolü. | açık |
-| **RONIN Island** (`ronin-island`) | Ekranın üstünde Dynamic Island tarzı bir çentik: Claude Code oturumlarının canlı durumu (çalışıyor / bitti / onay bekliyor), medya kontrolü, 25 dk odak sayacı, programdaki sıradaki blok. | kapalı |
+| **RONIN Island** (`ronin-island`) | Ekranın üstünde Dynamic Island tarzı bir çentik. Üstüne gelince açılır; alttaki sekme çubuğuyla Home (özet kutuları), Claude (tüm oturumlar, canlı durum: çalışıyor / bitti / onay bekliyor, rozetle), Music (büyük oynatıcı), Focus (25/50 dk sayaç), Today (program, şu anki blok vurgulu) ve isteğe bağlı Messages gelen kutusu (varsayılan kapalı) arasında geçersin. Çubuğun sonunda sistem ses kontrolü var (kaydırıcı, fare tekerleği ±5 %); 1–n tuşları sekme değiştirir, son sekme hatırlanır. | kapalı |
 | **RONIN Guard** (`ronin-guard`) | Laptop hırsızlık alarmı: kilit ekranı, tam seste siren, webcam fotoğrafı ve PIN'siz dokunulursa Telegram bildirimi. | istenince |
 | **Telegram** (`ronin-telegram`) | Kendi botun üzerinden telefondan ajanla konuş (resmî Claude Code Telegram kanal eklentisi), isteğe bağlı sabah özeti. | kapalı |
 | **Hatırlatmalar** (`ronin-reminders`) | `config.json`'daki tekrarlayan etkinliklerden belli bir süre önce bildirim (ve isteğe bağlı sesli cümle). | kapalı |
@@ -30,6 +30,7 @@ Temeli [Jared Rhodenizer](https://github.com/jaredrhod)'ın açık kaynak projel
 
 ![Island kapalı](docs/screenshots/island-pill.png)
 ![Island açık: Claude Code oturumları, müzik, odak sayacı, bugün](docs/screenshots/island-open.png)
+![Island Today sekmesi: program, şu anki blok vurgulu](docs/screenshots/island-tabs.png)
 
 **RONIN Guard**: laptop hırsız alarmı. Önce kilit, biri dokunursa PIN geri sayımı, girilmezse tam alarm (siren, kamera fotoğrafı, Telegram bildirimi).
 

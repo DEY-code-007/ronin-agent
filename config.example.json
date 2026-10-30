@@ -32,6 +32,16 @@
     }
   },
 
+  "island": {
+    "messages": {
+      "_comment": "Optional local inbox endpoint (POST, returns [{from,text,ts}]). Only http://127.0.0.1 / localhost URLs are accepted. secret_file (optional) is a file whose content is sent in the secret_header header; relative paths resolve against the install folder. When disabled the Messages tab is hidden.",
+      "enabled": false,
+      "url": "",
+      "secret_file": "",
+      "secret_header": "x-island-secret"
+    }
+  },
+
   "reminders": {
     "lead_minutes": 120,
     "min_left_minutes": 15,

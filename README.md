@@ -17,7 +17,7 @@ It stands on the open-source work of [Jared Rhodenizer](https://github.com/jared
 | **Voice + face** | [backtalk](https://github.com/jaredrhod/backtalk) (push-to-talk voice) and [ai-visualizer](https://github.com/jaredrhod/ai-visualizer) (animated face), cloned from upstream. | cloned |
 | **Launcher** (`ronin-app`) | One script starts the HUD, face, voice and the optional pieces, then opens the face as an Edge app window. Skips anything already running. | on |
 | **HUD sidecar** (`ronin-hud`) | Local JSON at `127.0.0.1:8797`: today's schedule, open tasks, active projects, today's work log, CPU/RAM/battery, service health, optional weather and watched sites. | on |
-| **RONIN Island** (`ronin-island`) | A Dynamic-Island style notch at the top of the screen: live Claude Code session state (working / done / needs approval), media controls, a 25-min focus timer, your next schedule block. | off |
+| **RONIN Island** (`ronin-island`) | A Dynamic-Island style notch at the top of the screen. Hover to open it; a bottom tab bar switches between Home (overview tiles), Claude (all sessions with live state: working / done / needs approval, plus a badge), Music (big player), Focus (25/50-min timer), Today (your schedule with the current block highlighted) and an optional Messages inbox (off by default). A system volume control (slider, mouse wheel ±5 %) sits at the end of the bar; keys 1–n switch tabs and the last tab is remembered. | off |
 | **RONIN Guard** (`ronin-guard`) | Laptop theft alarm: lock screen, siren at full volume, webcam photo and a Telegram ping if someone touches the laptop without your PIN. | run on demand |
 | **Telegram** (`ronin-telegram`) | Chat with your agent from your phone through your own bot (official Claude Code Telegram channel plugin), plus an optional morning summary. | off |
 | **Reminders** (`ronin-reminders`) | Notification (and optional spoken line) a set time before recurring events from `config.json`. | off |
@@ -30,6 +30,7 @@ It stands on the open-source work of [Jared Rhodenizer](https://github.com/jared
 
 ![Island collapsed](docs/screenshots/island-pill.png)
 ![Island open: Claude Code sessions, music, focus timer, today](docs/screenshots/island-open.png)
+![Island Today tab: the schedule with the current block highlighted](docs/screenshots/island-tabs.png)
 
 **RONIN Guard**: a laptop theft alarm. Locked, then a PIN countdown when someone touches it, then a full alarm (siren, webcam photo, Telegram ping).
 
@@ -86,6 +87,7 @@ Everything that used to be hardcoded lives in `config.json` in the install folde
 | `hud.port`, `hud.schedule_note`, `hud.day_rollover_hour` | HUD settings; the schedule note is `Weekly Schedule.md` in the vault |
 | `hud.watch_urls` | Sites to health-check, `[{"name": "...", "url": "https://..."}]` |
 | `hud.weather` | Optional Open-Meteo weather: `enabled`, `latitude`, `longitude` |
+| `island.messages` | Optional local inbox for the Island's Messages tab: `enabled` (default `false`, tab hidden), `url` (a `127.0.0.1` endpoint that answers `POST` with `[{from,text,ts}]`), `secret_file`, `secret_header` |
 | `reminders.events` | Recurring events: `{"name": "Gym", "days": ["Mon","Wed"], "start": "19:00"}` |
 | `reminders.lead_minutes`, `.lines`, `.speak`, `.voice_id` | When and how reminders fire; spoken lines need an ElevenLabs key |
 | `daily_summary.opener`, `.closer` | Wording of the morning Telegram message |
